@@ -8,13 +8,52 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 現状
 
-- ソース、ビルド、テストはまだない。
-- 技術スタックは未定。決まったら、このファイルにコマンドと構成を書き足すこと。
+- 個人サイト。今は、Google Cloud の OAuth アプリ「Minecraft-server-biuntri」に登録するプライバシーポリシーを置いている。このアプリは Minecraft サーバーのバックアップを Google Drive に保存するもの。
+- ポリシーは英語で、`/privacy-policy/` に置く。トップページ（`index.md`）は、アプリのホームページとして登録するためのもの。
+- テストはない。
 - 推測でコマンドや構成を書かない。
+
+## 技術スタック
+
+- Jekyll 4.4 と minima 2.5。
+- Ruby 3.4。バージョンは `.ruby-version` に書き、Actions と手元で同じものを使う。
+- 依存は `Gemfile` / `Gemfile.lock` で管理する。lock の PLATFORMS は `x64-mingw-ucrt` と `x86_64-linux`。
+- 手元の Ruby は、Windows では RubyInstaller（DevKit 付き、`C:\Ruby34-x64`）を使う。
+
+## コマンド
+
+``` sh
+bundle install
+bundle exec jekyll serve   # プレビュー（http://localhost:4000）
+bundle exec jekyll build   # 出力先は _site/（.gitignore 済み）
+JEKYLL_ENV=production bundle exec jekyll build   # 本番と同じ条件でビルド（Actions もこの形）
+```
+
+`jekyll serve` では、minima 2.5.2 による Sass の DEPRECATION WARNING が出るが、エラーではない。Windows では wdm gem を勧める案内も出るが、入れなくても動く。
+
+別の OS を lock に加えるときは `bundle lock --add-platform <platform>` を使う。
+
+## 構成
+
+- `_config.yml`: サイトの設定。`exclude` に `CLAUDE.md`、`README.md`、`.claude/`、`.githooks/` を入れて、公開しないようにしている。Jekyll 4.4 では既定の exclude は自動で足される。ドットで始まるファイルはもともと出力されない。公開したくないファイルを増やしたときは、ここに足す。
+- `index.md`: トップページ。
+- `privacy-policy.md`: プライバシーポリシー（`/privacy-policy/`）。
+- `.github/workflows/pages.yml`: ビルドと公開のワークフロー。
+
+## ポリシーを書き換えるとき
+
+- Effective date も更新する。
+- アプリ名「Minecraft-server-biuntri」は、OAuth 同意画面の名前と一致させる。
 
 ## 公開方法
 
-未定（技術スタックと合わせて決める）。
+GitHub Actions（`.github/workflows/pages.yml`）で GitHub Pages に公開する。
+
+- main 向けの PR では `build` ジョブだけが走る。デプロイはしない。
+- main への push で `build` と `deploy` が走り、公開される。
+- 手動実行（workflow_dispatch）もできる。デプロイされるのは ref が main のときだけ。
+- ジョブ名 `build` はブランチ保護の必須チェックに使う予定なので、変えない。
+- リポジトリの Settings → Pages の Source を「GitHub Actions」にする必要がある（未設定）。
 
 ## 作業ルール
 
