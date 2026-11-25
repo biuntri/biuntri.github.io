@@ -1,0 +1,22 @@
+#!/bin/sh
+# main への push を止める。標準入力の各行は "<local ref> <local sha> <remote ref> <remote sha>"。
+# remote ref で判定するので、HEAD:main のような指定や削除 push も拒否される。
+blocked=0
+while read -r local_ref local_sha remote_ref remote_sha; do
+	if [ "$remote_ref" = "refs/heads/main" ]; then
+		blocked=1
+	fi
+done
+
+if [ "$blocked" -eq 1 ]; then
+	cat >&2 <<'EOF'
+[pre-push] main ブランチへの push は禁止されています。
+理由: main は GitHub Pages で公開中の本番扱いのブランチです。
+回避策: 作業ブランチを push し、PR で main に入れてください。
+        例) git push -u origin <作業ブランチ名>
+緊急時のみ: git push --no-verify で回避できます。
+EOF
+	exit 1
+fi
+
+exit 0

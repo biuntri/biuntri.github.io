@@ -1,0 +1,16 @@
+#!/bin/sh
+# main への直接コミットを止める。detached HEAD（symbolic-ref が失敗）は対象外として通す。
+branch=$(git symbolic-ref --short -q HEAD) || exit 0
+
+if [ "$branch" = "main" ]; then
+	cat >&2 <<'EOF'
+[pre-commit] main ブランチへの直接コミットは禁止されています。
+理由: main は GitHub Pages で公開中の本番扱いのブランチです。
+回避策: 作業ブランチを作って作業し、PR で main に入れてください。
+        例) git switch -c <作業ブランチ名>
+緊急時のみ: git commit --no-verify で回避できます。
+EOF
+	exit 1
+fi
+
+exit 0

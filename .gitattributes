@@ -1,0 +1,4 @@
+# 各 PC の core.autocrlf に左右されず、Git がテキストと判定したファイルをリポジトリ内でも作業ツリーでも LF にそろえる
+* text=auto eol=lf
+# フックは sh で実行されるため、自動判定（text=auto）に任せず必ずテキストかつ LF として扱う（上の行より後に書いているので、こちらが優先される）
+.githooks/* text eol=lf
