@@ -31,7 +31,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### 有効化
 
-```
+``` sh
 git config core.hooksPath .githooks
 ```
 
