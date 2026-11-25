@@ -1,0 +1,18 @@
+title: biuntri
+description: biuntri's personal site.
+url: "https://biuntri.github.io"
+baseurl: ""
+theme: minima
+lang: en
+
+# minima のヘッダーナビに出すページ
+header_pages:
+  - privacy-policy.md
+
+# リポジトリ管理用のファイルは公開しない（Jekyll の既定の exclude は自動で追加される）。
+# 公開したくないファイルを増やしたときは、ここに足す
+exclude:
+  - CLAUDE.md
+  - README.md
+  - .claude/
+  - .githooks/
