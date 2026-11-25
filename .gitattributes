@@ -1,0 +1,2 @@
+# フックは sh で実行されるため、Windows でも CRLF に変換されないよう LF に固定する
+.githooks/* text eol=lf
