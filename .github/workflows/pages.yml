@@ -1,0 +1,64 @@
+name: Pages
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# PR のビルドだけ、同じ PR の古い実行を止める。
+# push と手動実行は固定グループ deploy-main で1つずつ順に流し、実行中のものは途中で止めない。
+# 実行ごとに別グループだと、古いビルドが新しいデプロイの後から公開されることがあるため。
+# なお同じグループで待機できるのは1件だけで、待機中の古い実行は新しい実行に置き換えられて
+# キャンセルされる。main への push 同士なら、最新のコミットが公開される。
+# main 以外の ref で手動実行すると、待機中の main の実行を押し出すことがある。
+# その手動実行はデプロイしないので、最新の main は公開されないまま残る。
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.ref) || 'deploy-main' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  # ジョブ名 build はブランチ保護の必須チェックに使う予定なので変えない
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # 後続のステップで git の認証情報を使わないので残さない
+          persist-credentials: false
+      - uses: ruby/setup-ruby@v1
+        with:
+          # ruby-version を指定しないので、Ruby のバージョンは .ruby-version から読む
+          bundler-cache: true
+      # ユーザーサイトなので baseurl は常に空。_config.yml の baseurl: "" をそのまま使う
+      - name: Build with Jekyll
+        run: bundle exec jekyll build
+        env:
+          JEKYLL_ENV: production
+      # deploy ジョブと同じ条件。デプロイしない実行では成果物のアップロードも省く
+      - if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v5
+
+  deploy:
+    needs: build
+    # main への push と、main での手動実行のときだけデプロイする
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    # ワークフロー全体の concurrency で順に流しているので、今は実質不要。
+    # ほかのワークフローが将来 Pages にデプロイするときに、デプロイが重ならないよう備えて残している
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
